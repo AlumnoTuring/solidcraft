@@ -136,20 +136,7 @@ pub(crate) fn native_resize(ui: &mut Ui, minimum: Vec2) {
     let clip = ui.clip_rect();
     ui.set_clip_rect(rect);
     for (name, x, y) in super::panel::RESIZE_DIRECTIONS {
-        let hit = if x != 0 && y != 0 {
-            let at = egui::pos2(if x < 0 { rect.left() } else { rect.right() - corner }, if y < 0 { rect.top() } else { rect.bottom() - corner });
-            Rect::from_min_size(at, Vec2::splat(corner))
-        } else if x != 0 {
-            Rect::from_min_max(
-                egui::pos2(if x < 0 { rect.left() } else { rect.right() - side }, rect.top() + corner),
-                egui::pos2(if x < 0 { rect.left() + side } else { rect.right() }, rect.bottom() - corner),
-            )
-        } else {
-            Rect::from_min_max(
-                egui::pos2(rect.left() + corner, if y < 0 { rect.top() } else { rect.bottom() - side }),
-                egui::pos2(rect.right() - corner, if y < 0 { rect.top() + side } else { rect.bottom() }),
-            )
-        };
+        let hit = super::panel::resize_hit(rect, x, y, corner, side, false);
         let id = Id::new("sc_native_resize").with(ctx.viewport_id()).with(name);
         let response = ui.interact(hit, id, egui::Sense::drag());
         super::panel::resize_cursor(ui, hit, &response, super::panel::resize_icon(x, y));
@@ -229,7 +216,7 @@ pub(super) struct Title {
     pub docked: Pos2,
 }
 
-pub(super) fn register(ctx: &Context, id: Id, key: &str, docked: Pos2, _side: crate::frame::Side) {
+pub(super) fn register(ctx: &Context, id: Id, key: &str, docked: Pos2) {
     ctx.data_mut(|d| d.insert_temp(id.with("floating_title"), Title { key: key.into(), docked }));
 }
 

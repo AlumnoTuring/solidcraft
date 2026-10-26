@@ -15,6 +15,24 @@ pub(super) const RESIZE_DIRECTIONS: [(&str, i32, i32); 8] = [
     ("bottom", 0, 1),
 ];
 
+/// Embedded targets straddle the border; native targets stay inside the content area.
+pub(super) fn resize_hit(rect: egui::Rect, x: i32, y: i32, corner: f32, side: f32, centered: bool) -> egui::Rect {
+    let at = rect.lerp_inside((vec2(x as f32, y as f32) + egui::Vec2::splat(1.0)) * 0.5);
+    let inset = if centered { corner * 0.5 } else { corner };
+    let size = if x != 0 && y != 0 {
+        vec2(corner, corner)
+    } else if x == 0 {
+        vec2(rect.width() - 2.0 * inset, side)
+    } else {
+        vec2(side, rect.height() - 2.0 * inset)
+    };
+    if centered {
+        egui::Rect::from_center_size(at, size.max(egui::Vec2::ZERO))
+    } else {
+        egui::Rect::from_center_size(at - vec2(x as f32 * size.x, y as f32 * size.y) * 0.5, size)
+    }
+}
+
 pub(super) fn resize_icon(x: i32, y: i32) -> egui::CursorIcon {
     match (x, y) {
         (0, _) => egui::CursorIcon::ResizeVertical,
@@ -643,7 +661,7 @@ impl<'a> Panel<'a> {
                 }
             } else {
                 crate::frame::drag_dock(ui, band, heading.drag_key, heading.moved, self.bounded_anchor(ui.ctx()) - heading.docked);
-                super::floating::register(ui.ctx(), self.id, heading.drag_key, heading.docked, self.side);
+                super::floating::register(ui.ctx(), self.id, heading.drag_key, heading.docked);
             }
             let mut close = false;
             let top = if DialogButtons::current(ui.ctx()) == DialogButtons::Top {
@@ -747,32 +765,8 @@ impl<'a> Panel<'a> {
         let clip = ui.clip_rect();
         ui.set_clip_rect(ui.ctx().content_rect());
         for (name, x, y) in RESIZE_DIRECTIONS {
-            let corner = egui::pos2(
-                if x < 0 {
-                    rect.left()
-                } else if x > 0 {
-                    rect.right()
-                } else {
-                    rect.center().x
-                },
-                if y < 0 {
-                    rect.top()
-                } else if y > 0 {
-                    rect.bottom()
-                } else {
-                    rect.center().y
-                },
-            );
-            let at = corner;
-            let corner_inset = t.space_8;
-            let size = if x == 0 {
-                vec2((rect.width() - 2.0 * corner_inset).max(0.0), t.space_8)
-            } else if y == 0 {
-                vec2(t.space_8, (rect.height() - 2.0 * corner_inset).max(0.0))
-            } else {
-                vec2(t.space_16, t.space_16)
-            };
-            let hit = egui::Rect::from_center_size(at, size);
+            let hit = resize_hit(rect, x, y, t.space_16, t.space_8, true);
+            let at = hit.center();
             let id = self.id.with(("resize", name));
             let response = ui.interact(hit, id, egui::Sense::drag());
             resize_cursor(ui, hit, &response, resize_icon(x, y));
@@ -816,7 +810,7 @@ impl<'a> Panel<'a> {
             if x == 1 && y == 1 {
                 for offset in [t.space_2, t.space_4] {
                     ui.painter().line_segment(
-                        [corner - vec2(offset + t.space_2, t.space_2), corner - vec2(t.space_2, offset + t.space_2)],
+                        [at - vec2(offset + t.space_2, t.space_2), at - vec2(t.space_2, offset + t.space_2)],
                         t.tertiary_border(t.dialog_rule),
                     );
                 }
@@ -850,7 +844,7 @@ impl<'a> Panel<'a> {
                 }
             } else {
                 crate::frame::drag_dock(ui, band, "SKETCH_PALETTE", moved, self.bounded_anchor(ui.ctx()) - docked);
-                super::floating::register(ui.ctx(), self.id, "SKETCH_PALETTE", docked, self.side);
+                super::floating::register(ui.ctx(), self.id, "SKETCH_PALETTE", docked);
             }
             let height = (bottom - top - self.frame.total_margin().sum().y).max(0.0);
             let short = height < t.space_24 * 6.0;
@@ -1052,7 +1046,7 @@ impl<'a> Window<'a> {
                     let moved =
                         ui.ctx().data(|d| d.get_temp::<egui::Vec2>(egui::Id::new(("sc_dock_offset", key.as_str())))).unwrap_or(rect.min.to_vec2());
                     crate::frame::drag_dock(ui, band, &key, moved, rect.min.to_vec2());
-                    super::floating::register(ui.ctx(), self.id, &key, egui::Pos2::ZERO, crate::frame::Side::Left);
+                    super::floating::register(ui.ctx(), self.id, &key, egui::Pos2::ZERO);
                 }
             }
             header_impl(ui, self.icon, self.title, None, self.closeable, || close = true);
