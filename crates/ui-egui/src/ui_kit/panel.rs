@@ -3,6 +3,27 @@ use super::{actions::icon_button_at, metrics::*, text::paint_text};
 use crate::{scenario, theme::Tokens};
 use egui::{Ui, vec2};
 
+/// Shared directions and cursor mapping for embedded and detached resize handles.
+pub(super) const RESIZE_DIRECTIONS: [(&str, i32, i32); 8] = [
+    ("top_left", -1, -1),
+    ("top_right", 1, -1),
+    ("bottom_left", -1, 1),
+    ("bottom_right", 1, 1),
+    ("left", -1, 0),
+    ("right", 1, 0),
+    ("top", 0, -1),
+    ("bottom", 0, 1),
+];
+
+pub(super) fn resize_icon(x: i32, y: i32) -> egui::CursorIcon {
+    match (x, y) {
+        (0, _) => egui::CursorIcon::ResizeVertical,
+        (_, 0) => egui::CursorIcon::ResizeHorizontal,
+        _ if x == y => egui::CursorIcon::ResizeNwSe,
+        _ => egui::CursorIcon::ResizeNeSw,
+    }
+}
+
 #[derive(Clone)]
 struct ResizeCursor {
     id: egui::Id,
@@ -725,16 +746,7 @@ impl<'a> Panel<'a> {
         // Resize targets straddle the card, including the half outside its content clip.
         let clip = ui.clip_rect();
         ui.set_clip_rect(ui.ctx().content_rect());
-        for (name, x, y) in [
-            ("top_left", -1, -1),
-            ("top_right", 1, -1),
-            ("bottom_left", -1, 1),
-            ("bottom_right", 1, 1),
-            ("left", -1, 0),
-            ("right", 1, 0),
-            ("top", 0, -1),
-            ("bottom", 0, 1),
-        ] {
+        for (name, x, y) in RESIZE_DIRECTIONS {
             let corner = egui::pos2(
                 if x < 0 {
                     rect.left()
@@ -763,20 +775,7 @@ impl<'a> Panel<'a> {
             let hit = egui::Rect::from_center_size(at, size);
             let id = self.id.with(("resize", name));
             let response = ui.interact(hit, id, egui::Sense::drag());
-            resize_cursor(
-                ui,
-                hit,
-                &response,
-                if x == 0 {
-                    egui::CursorIcon::ResizeVertical
-                } else if y == 0 {
-                    egui::CursorIcon::ResizeHorizontal
-                } else if x == y {
-                    egui::CursorIcon::ResizeNwSe
-                } else {
-                    egui::CursorIcon::ResizeNeSw
-                },
-            );
+            resize_cursor(ui, hit, &response, resize_icon(x, y));
             scenario::publish_handle(&format!("dialog:resize:{}:{name}", heading.drag_key), at);
             scenario::publish_rect(&format!("dialog:resize:{}:{name}", heading.drag_key), hit);
             let base = id.with("base");

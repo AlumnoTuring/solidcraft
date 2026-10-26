@@ -135,16 +135,7 @@ pub(crate) fn native_resize(ui: &mut Ui, minimum: Vec2) {
     let side = crate::theme::Tokens::get().space_6;
     let clip = ui.clip_rect();
     ui.set_clip_rect(rect);
-    for (name, x, y) in [
-        ("top_left", -1, -1),
-        ("top_right", 1, -1),
-        ("bottom_left", -1, 1),
-        ("bottom_right", 1, 1),
-        ("left", -1, 0),
-        ("right", 1, 0),
-        ("top", 0, -1),
-        ("bottom", 0, 1),
-    ] {
+    for (name, x, y) in super::panel::RESIZE_DIRECTIONS {
         let hit = if x != 0 && y != 0 {
             let at = egui::pos2(if x < 0 { rect.left() } else { rect.right() - corner }, if y < 0 { rect.top() } else { rect.bottom() - corner });
             Rect::from_min_size(at, Vec2::splat(corner))
@@ -161,20 +152,7 @@ pub(crate) fn native_resize(ui: &mut Ui, minimum: Vec2) {
         };
         let id = Id::new("sc_native_resize").with(ctx.viewport_id()).with(name);
         let response = ui.interact(hit, id, egui::Sense::drag());
-        super::panel::resize_cursor(
-            ui,
-            hit,
-            &response,
-            if x == 0 {
-                egui::CursorIcon::ResizeVertical
-            } else if y == 0 {
-                egui::CursorIcon::ResizeHorizontal
-            } else if x == y {
-                egui::CursorIcon::ResizeNwSe
-            } else {
-                egui::CursorIcon::ResizeNeSw
-            },
-        );
+        super::panel::resize_cursor(ui, hit, &response, super::panel::resize_icon(x, y));
         crate::scenario::publish_rect(&format!("window:native_resize:{name}"), hit);
         crate::scenario::publish_handle(&format!("window:native_resize:{name}"), hit.center());
         if response.drag_started()
