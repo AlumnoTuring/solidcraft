@@ -1,0 +1,26 @@
+{
+  "en": {
+    "table.resize_column_hint": "Drag to resize. Double-click to restore the automatic width.",
+    "manage.parameters_pop_out": "Open in separate window",
+    "manage.parameters_dock": "Dock in main window",
+    "prefs.parameters_fit_columns": "Fit parameter columns to contents"
+  },
+  "de": {
+    "table.resize_column_hint": "Ziehen zum Ändern der Breite. Doppelklicken, um die automatische Breite wiederherzustellen.",
+    "manage.parameters_pop_out": "In eigenem Fenster öffnen",
+    "manage.parameters_dock": "Im Hauptfenster andocken",
+    "prefs.parameters_fit_columns": "Parameterspalten an den Inhalt anpassen"
+  },
+  "ja": {
+    "table.resize_column_hint": "ドラッグして幅を変更します。ダブルクリックすると自動調整に戻ります。",
+    "manage.parameters_pop_out": "別ウィンドウで開く",
+    "manage.parameters_dock": "メインウィンドウに戻す",
+    "prefs.parameters_fit_columns": "パラメータ列の幅を内容に合わせる"
+  },
+  "zh": {
+    "table.resize_column_hint": "拖动以调整宽度。双击以恢复自动宽度。",
+    "manage.parameters_pop_out": "在独立窗口中打开",
+    "manage.parameters_dock": "停靠到主窗口",
+    "prefs.parameters_fit_columns": "按内容自动调整参数列宽"
+  }
+}
