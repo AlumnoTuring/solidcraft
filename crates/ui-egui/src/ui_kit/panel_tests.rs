@@ -1121,7 +1121,7 @@ fn tear_off_requires_a_deliberate_pull_but_hands_off_before_the_pointer_leaves()
 #[test]
 fn feature_forms_share_resizing_and_deliberate_native_tear_off() {
     use serde_json::json;
-    for command in ["solid.box", "solid.extrude", "solid.shell"] {
+    for (command, placement) in [("solid.box", "bottom"), ("solid.extrude", "bottom"), ("solid.shell", "bottom"), ("solid.box", "top")] {
         let identity = match command {
             "solid.box" => "BOX",
             "solid.extrude" => "EXTRUDE",
@@ -1130,6 +1130,7 @@ fn feature_forms_share_resizing_and_deliberate_native_tear_off() {
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
         h.call("ui.resize", json!({"width":1800,"height":1200}));
+        h.call("ui.prefs", json!({"dialog_buttons":placement}));
         h.step(&json!({"start":command})).unwrap();
         h.frames(6);
         let info = crate::scenario::rects("dialog:resize:");

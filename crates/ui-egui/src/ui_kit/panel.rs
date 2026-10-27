@@ -689,7 +689,6 @@ impl<'a> Panel<'a> {
             // cannot also grab the card's right edge.
             let fields_width = (ui.available_width() - if self.resizable { t.space_4 } else { 0.0 }).max(0.0);
             let fields_rect = egui::Rect::from_min_size(ui.cursor().min, vec2(fields_width, fields_height));
-
             let state = if collapsed.as_deref().copied().unwrap_or(false) {
                 scenario::publish_count("dialog:body:content_height", 0.0);
                 ComputeStatus { text: None, busy: disabled, applying: disabled }
@@ -728,6 +727,9 @@ impl<'a> Panel<'a> {
             if let Some(top) = &top {
                 let action = top.finish(ui, heading.icon, heading.title, &state, valid && !state.applying);
                 super::Container::finish_content(ui, self.positioned_frame(ui.ctx()));
+                if self.resizable {
+                    self.resize_handles(ui, &heading);
+                }
                 return (close, action);
             }
             let corners = self.positioned_frame(ui.ctx()).corner_radius;
